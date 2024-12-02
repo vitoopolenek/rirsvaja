@@ -4,65 +4,54 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  frontend-tests:
-    name: Run Frontend Tests
+  test-backend:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install dependencies
-      run: |
-        cd aplikacija
-        npm install
+      - name: Install backend dependencies
+        run: |
+          cd aplikacija/backend
+          npm install
 
-    - name: Run Frontend Tests
-      run: |
-        cd aplikacija
-        npm test
+      - name: Run backend tests
+        run: |
+          cd aplikacija/backend
+          npm test
 
-    - name: Upload Test Coverage Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: frontend-coverage
-        path: aplikacija/coverage/
-
-  backend-tests:
-    name: Run Backend Tests
+  test-frontend:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm install
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-    - name: Run Backend Tests
-      run: |
-        cd backend
-        npm test
+      - name: Install frontend dependencies
+        run: |
+          cd aplikacija
+          npm install
 
-    - name: Upload Test Coverage Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: backend-coverage
-        path: backend/coverage/
+      - name: Run frontend tests
+        run: |
+          cd aplikacija
+          npm test
