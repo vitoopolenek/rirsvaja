@@ -2,13 +2,12 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
- "scripts": {
-  "start": "node index.js",
-  "test": "start-server-and-test start http://127.0.0.1:5000 jest",
-  "build": "echo 'No build required for backend'",
-  "dev": "nodemon index.js"
-}
-,
+  "scripts": {
+    "start": "node index.js",
+    "test": "start-server-and-test start http://127.0.0.1:5000 jest",
+    "build": "echo 'No build required for backend'",
+    "dev": "nodemon index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,7 +19,8 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "start-server-and-test": "^2.0.8",
+    "supertest": "^6.3.3"
   }
 }
