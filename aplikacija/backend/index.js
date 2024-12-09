@@ -1,8 +1,8 @@
 const express = require("express");
-const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const sqlite3 = require("sqlite3").verbose(); // Use SQLite
 
 dotenv.config({ path: "../.env" });
 
@@ -14,47 +14,74 @@ app.use(express.json());
 
 let db;
 
-// Function to establish a connection to the MySQL database
-const connectToDatabase = async () => {
-  try {
-    db = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT,
-    });
-    console.log("Connected to MySQL database");
-  } catch (error) {
-    console.error(
-      `Error connecting to MySQL, retrying in 5 seconds: ${error.message}`
+// Use SQLite for testing or MySQL for production
+if (process.env.NODE_ENV === "test") {
+  db = new sqlite3.Database(":memory:", (err) => {
+    if (err) {
+      console.error("Error connecting to SQLite:", err.message);
+    } else {
+      console.log("Connected to SQLite in-memory database.");
+      seedTestDatabase(); // Seed in-memory database
+    }
+  });
+} else {
+  const mysql = require("mysql2/promise");
+  const connectToDatabase = async () => {
+    try {
+      db = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        port: process.env.DB_PORT,
+      });
+      console.log("Connected to MySQL database");
+    } catch (error) {
+      console.error(
+        `Error connecting to MySQL, retrying in 5 seconds: ${error.message}`
+      );
+      setTimeout(connectToDatabase, 5000);
+    }
+  };
+  connectToDatabase();
+}
+
+// Seed the SQLite database for testing
+const seedTestDatabase = () => {
+  const createEmployeesTable = `
+    CREATE TABLE employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT,
+      password TEXT,
+      name TEXT
     );
-    setTimeout(connectToDatabase, 5000); // Retry every 5 seconds
-  }
-};
+  `;
+  const createWorkEntriesTable = `
+    CREATE TABLE work_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id INTEGER,
+      date TEXT,
+      hours_worked INTEGER,
+      description TEXT
+    );
+  `;
+  const insertEmployees = `
+    INSERT INTO employees (username, password, name) VALUES
+    ('testuser', '${bcrypt.hashSync("password123", 10)}', 'Test User');
+  `;
+  const insertWorkEntries = `
+    INSERT INTO work_entries (employee_id, date, hours_worked, description) VALUES
+    (1, '2024-11-01', 8, 'Worked on project'),
+    (1, '2024-11-02', 6, 'Worked on bug fixes');
+  `;
 
-// Function to seed the database with test data
-const seedDatabase = async () => {
-  try {
-    const seedEmployees = `
-      INSERT IGNORE INTO employees (id, name, username, password) VALUES
-      (1, 'John Doe', 'john', '${await bcrypt.hash("password123", 10)}'),
-      (2, 'Jane Smith', 'jane', '${await bcrypt.hash("password123", 10)}');
-    `;
-
-    const seedWorkEntries = `
-      INSERT IGNORE INTO work_entries (id, employee_id, hours_worked, date, description) VALUES
-      (1, 1, 8, '2024-11-01', 'Worked on project A'),
-      (2, 1, 6, '2024-11-02', 'Worked on project B'),
-      (3, 2, 7, '2024-11-01', 'Worked on project C');
-    `;
-
-    await db.query(seedEmployees);
-    await db.query(seedWorkEntries);
-    console.log("Database seeded successfully");
-  } catch (error) {
-    console.error("Error seeding the database:", error.message);
-  }
+  db.serialize(() => {
+    db.run(createEmployeesTable);
+    db.run(createWorkEntriesTable);
+    db.run(insertEmployees);
+    db.run(insertWorkEntries);
+    console.log("Seeded SQLite test database.");
+  });
 };
 
 // Health check route
@@ -62,10 +89,20 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
-// Route to fetch all employees
+// Use SQLite's `all` for querying during tests
+const queryDb = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+// Routes (same logic as before)
 app.get("/api/employees", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM employees");
+    const rows = await queryDb("SELECT * FROM employees");
     res.json(rows);
   } catch (err) {
     console.error("Error fetching employees:", err);
@@ -73,83 +110,15 @@ app.get("/api/employees", async (req, res) => {
   }
 });
 
-// Route to fetch work entries for a specific employee
-app.get("/api/entries", async (req, res) => {
-  const { employeeId } = req.query;
-
-  if (!employeeId) {
-    return res.status(400).json({ error: "Employee ID is required" });
-  }
-
-  try {
-    const [rows] = await db.query(
-      "SELECT * FROM work_entries WHERE employee_id = ?",
-      [employeeId]
-    );
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "No work entries found" });
-    }
-    res.status(200).json(rows);
-  } catch (err) {
-    console.error("Error fetching work entries:", err);
-    res.status(500).json({ error: "Failed to fetch work entries" });
-  }
-});
-
-// Route to fetch monthly hours for a specific employee
-app.get("/api/entries/month", async (req, res) => {
-  const { employeeId, month } = req.query;
-
-  if (!employeeId || !month) {
-    return res.status(400).json({ error: "Employee ID and month are required" });
-  }
-
-  try {
-    const [rows] = await db.query(
-      "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?",
-      [employeeId, month]
-    );
-    res.status(200).json(rows);
-  } catch (err) {
-    console.error("Error fetching monthly hours:", err);
-    res.status(500).json({ error: "Failed to fetch monthly hours" });
-  }
-});
-
-// Route to update a work entry
-app.put("/api/entries/:id", async (req, res) => {
-  const { id } = req.params;
-  const { hoursWorked, date, description } = req.body;
-
-  try {
-    const [result] = await db.query(
-      "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?",
-      [hoursWorked, date, description, id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Work entry not found" });
-    }
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (err) {
-    console.error("Error updating work entry:", err);
-    res.status(500).json({ error: "Failed to update work entry" });
-  }
-});
-
-// Route to fetch total hours
 app.get("/api/entries/total-hours", async (req, res) => {
   const { startDate, endDate } = req.query;
 
   if (!startDate || !endDate) {
-    return res.status(400).json({
-      error: "Start date and end date are required",
-    });
+    return res.status(400).json({ error: "Start date and end date are required" });
   }
 
   try {
-    const [rows] = await db.query(
-      `
+    const query = `
       SELECT 
         e.id AS employee_id,
         e.name AS employee_name,
@@ -158,9 +127,8 @@ app.get("/api/entries/total-hours", async (req, res) => {
       LEFT JOIN work_entries w ON e.id = w.employee_id
       WHERE w.date BETWEEN ? AND ?
       GROUP BY e.id, e.name
-      `,
-      [startDate, endDate]
-    );
+    `;
+    const rows = await queryDb(query, [startDate, endDate]);
     res.status(200).json(rows);
   } catch (err) {
     console.error("Error fetching total hours:", err);
@@ -168,56 +136,9 @@ app.get("/api/entries/total-hours", async (req, res) => {
   }
 });
 
-// Login route
-app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const [rows] = await db.query(
-      "SELECT * FROM employees WHERE username = ?",
-      [username]
-    );
-    if (rows.length === 0) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
-    }
-
-    const user = rows[0];
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-      res.json({ success: true, user });
-    } else {
-      res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
-    }
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-// Start the server only after connecting to the database and seeding data
-const startServer = async () => {
-  await connectToDatabase();
-  await seedDatabase();
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-  });
-};
-
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("Shutting down server...");
-  if (db) {
-    await db.end();
-    console.log("MySQL connection closed");
-  }
-  process.exit(0);
-});
-
 // Start the server
-startServer();
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
 
 module.exports = { app, db };
