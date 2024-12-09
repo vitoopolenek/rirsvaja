@@ -53,6 +53,7 @@ services:
         condition: service_healthy
     networks:
       - my_network
+    restart: always
 
 volumes:
   mysql_data:

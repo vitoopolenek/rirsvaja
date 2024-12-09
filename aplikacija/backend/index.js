@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql = require("mysql2/promise"); // Use the promise-based version
+const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -33,6 +33,30 @@ const connectToDatabase = async () => {
   }
 };
 
+// Function to seed the database with test data
+const seedDatabase = async () => {
+  try {
+    const seedEmployees = `
+      INSERT IGNORE INTO employees (id, name, username, password) VALUES
+      (1, 'John Doe', 'john', '${await bcrypt.hash("password123", 10)}'),
+      (2, 'Jane Smith', 'jane', '${await bcrypt.hash("password123", 10)}');
+    `;
+
+    const seedWorkEntries = `
+      INSERT IGNORE INTO work_entries (id, employee_id, hours_worked, date, description) VALUES
+      (1, 1, 8, '2024-11-01', 'Worked on project A'),
+      (2, 1, 6, '2024-11-02', 'Worked on project B'),
+      (3, 2, 7, '2024-11-01', 'Worked on project C');
+    `;
+
+    await db.query(seedEmployees);
+    await db.query(seedWorkEntries);
+    console.log("Database seeded successfully");
+  } catch (error) {
+    console.error("Error seeding the database:", error.message);
+  }
+};
+
 // Health check route
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is running" });
@@ -58,7 +82,10 @@ app.get("/api/entries", async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query("SELECT * FROM work_entries WHERE employee_id = ?", [employeeId]);
+    const [rows] = await db.query(
+      "SELECT * FROM work_entries WHERE employee_id = ?",
+      [employeeId]
+    );
     if (rows.length === 0) {
       return res.status(404).json({ error: "No work entries found" });
     }
@@ -78,7 +105,10 @@ app.get("/api/entries/month", async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query("SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?", [employeeId, month]);
+    const [rows] = await db.query(
+      "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?",
+      [employeeId, month]
+    );
     res.status(200).json(rows);
   } catch (err) {
     console.error("Error fetching monthly hours:", err);
@@ -112,7 +142,9 @@ app.get("/api/entries/total-hours", async (req, res) => {
   const { startDate, endDate } = req.query;
 
   if (!startDate || !endDate) {
-    return res.status(400).json({ error: "Start date and end date are required" });
+    return res.status(400).json({
+      error: "Start date and end date are required",
+    });
   }
 
   try {
@@ -141,9 +173,14 @@ app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const [rows] = await db.query("SELECT * FROM employees WHERE username = ?", [username]);
+    const [rows] = await db.query(
+      "SELECT * FROM employees WHERE username = ?",
+      [username]
+    );
     if (rows.length === 0) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
     const user = rows[0];
@@ -151,7 +188,9 @@ app.post("/api/login", async (req, res) => {
     if (match) {
       res.json({ success: true, user });
     } else {
-      res.status(401).json({ success: false, message: "Invalid credentials" });
+      res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
   } catch (err) {
     console.error("Database error:", err);
@@ -159,9 +198,10 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Start the server only after connecting to the database
+// Start the server only after connecting to the database and seeding data
 const startServer = async () => {
   await connectToDatabase();
+  await seedDatabase();
   app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
   });
