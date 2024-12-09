@@ -19,11 +19,16 @@ jobs:
       run: |
         docker-compose -f aplikacija/backend/docker-compose.yml up -d
         echo "Waiting for MySQL to be healthy..."
-        until docker inspect --format="{{.State.Health.Status}}" my_mysql | grep -q "healthy"; do
+        until [ "$(docker inspect --format='{{.State.Health.Status}}' my_mysql)" == "healthy" ]; do
           echo "MySQL is not healthy yet. Retrying in 5 seconds..."
           sleep 5
         done
         echo "MySQL is healthy!"
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
     - name: Install Dependencies
       run: |
@@ -48,7 +53,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Set Up Node.js
+    - name: Install Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
