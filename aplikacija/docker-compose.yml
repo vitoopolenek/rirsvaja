@@ -16,7 +16,11 @@ services:
       - ./db/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
     networks:
       - my_network
-    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -31,7 +35,6 @@ services:
       - mysql
     networks:
       - my_network
-    restart: always
 
   backend:
     build:
@@ -46,10 +49,10 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - my_network
-    restart: always
 
 volumes:
   mysql_data:
