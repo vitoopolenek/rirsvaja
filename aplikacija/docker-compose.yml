@@ -31,6 +31,22 @@ services:
     networks:
       - my_network
 
+  backend:
+    build:
+      context: ./backend
+    container_name: my_backend
+    environment:
+      DB_HOST: mysql
+      DB_USER: projectuser
+      DB_PASSWORD: projectpass123
+      DB_NAME: projectdb
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    networks:
+      - my_network
+
 volumes:
   mysql_data:
 

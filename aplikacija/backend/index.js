@@ -99,6 +99,42 @@ app.put("/api/entries/:id", async (req, res) => {
   });
 });
 
+const isValidDate = (date) => {
+  return !isNaN(Date.parse(date));
+};
+
+app.get("/api/entries/total-hours", (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: "Start date and end date are required" });
+  }
+
+  if (!isValidDate(startDate) || !isValidDate(endDate)) {
+    return res.status(400).json({ error: "Invalid date format" });
+  }
+
+  const query = `
+    SELECT 
+      e.id AS employee_id,
+      e.name AS employee_name,
+      SUM(w.hours_worked) AS total_hours
+    FROM employees e
+    LEFT JOIN work_entries w ON e.id = w.employee_id
+    WHERE w.date BETWEEN ? AND ?
+    GROUP BY e.id, e.name
+  `;
+
+  db.query(query, [startDate, endDate], (err, results) => {
+    if (err) {
+      console.error("Error fetching total hours:", err);
+      return res.status(500).json({ error: "Failed to fetch total hours" });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
