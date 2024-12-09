@@ -4,34 +4,37 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 
-dotenv.config({ path: "../.env" });
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-});
+// Retry logic for MySQL connection
+let db;
+const connectWithRetry = () => {
+  db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
+  });
 
-// Connect to MySQL database
-const connectToDatabase = () => {
   db.connect((err) => {
     if (err) {
-      console.error("Error connecting to MySQL:", err);
-      setTimeout(connectToDatabase, 5000); // Retry every 5 seconds
+      console.error("Error connecting to MySQL, retrying in 5 seconds:", err.message);
+      setTimeout(connectWithRetry, 5000); // Retry every 5 seconds
     } else {
       console.log("Connected to MySQL database");
     }
   });
 };
-connectToDatabase();
+connectWithRetry();
 
 // Health check route
 app.get("/health", (req, res) => {
@@ -42,7 +45,10 @@ app.get("/health", (req, res) => {
 app.get("/api/employees", (req, res) => {
   const query = "SELECT * FROM employees";
   db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: "Failed to fetch employees" });
+    if (err) {
+      console.error("Error fetching employees:", err.message);
+      return res.status(500).json({ error: "Failed to fetch employees" });
+    }
     res.json(results);
   });
 });
@@ -58,7 +64,7 @@ app.get("/api/entries", (req, res) => {
   const query = "SELECT * FROM work_entries WHERE employee_id = ?";
   db.query(query, [employeeId], (err, results) => {
     if (err) {
-      console.error("Error fetching work entries:", err);
+      console.error("Error fetching work entries:", err.message);
       return res.status(500).json({ error: "Failed to fetch work entries" });
     }
 
@@ -66,7 +72,7 @@ app.get("/api/entries", (req, res) => {
       return res.status(404).json({ error: "No work entries found" });
     }
 
-    res.status(200).json(results);
+    res.json(results);
   });
 });
 
@@ -82,11 +88,11 @@ app.get("/api/entries/month", (req, res) => {
     "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?";
   db.query(query, [employeeId, month], (err, results) => {
     if (err) {
-      console.error("Error fetching monthly hours:", err);
+      console.error("Error fetching monthly hours:", err.message);
       return res.status(500).json({ error: "Failed to fetch monthly hours" });
     }
 
-    res.status(200).json(results);
+    res.json(results);
   });
 });
 
@@ -99,7 +105,7 @@ app.put("/api/entries/:id", (req, res) => {
     "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?";
   db.query(query, [hoursWorked, date, description, id], (err, results) => {
     if (err) {
-      console.error("Error updating work entry:", err);
+      console.error("Error updating work entry:", err.message);
       return res.status(500).json({ error: "Failed to update work entry" });
     }
 
@@ -107,7 +113,7 @@ app.put("/api/entries/:id", (req, res) => {
       return res.status(404).json({ error: "Work entry not found" });
     }
 
-    res.status(200).json({ message: "Data updated successfully" });
+    res.json({ message: "Data updated successfully" });
   });
 });
 
@@ -132,11 +138,11 @@ app.get("/api/entries/total-hours", (req, res) => {
 
   db.query(query, [startDate, endDate], (err, results) => {
     if (err) {
-      console.error("Error fetching total hours:", err);
+      console.error("Error fetching total hours:", err.message);
       return res.status(500).json({ error: "Failed to fetch total hours" });
     }
 
-    res.status(200).json(results);
+    res.json(results);
   });
 });
 
@@ -147,7 +153,7 @@ app.post("/api/login", (req, res) => {
   const query = "SELECT * FROM employees WHERE username = ?";
   db.query(query, [username], async (err, results) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("Database error:", err.message);
       return res.status(500).json({ error: "Database error" });
     }
 
@@ -164,7 +170,7 @@ app.post("/api/login", (req, res) => {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
     } catch (err) {
-      console.error("Error comparing passwords:", err);
+      console.error("Error comparing passwords:", err.message);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
