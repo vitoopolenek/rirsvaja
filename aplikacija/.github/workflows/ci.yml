@@ -22,10 +22,12 @@ jobs:
 
     - name: Install Dependencies
       run: |
-          cd aplikacija/backend
-          npm install --force # Ensures all modules are installed, including sqlite3
-    
+        cd aplikacija/backend
+        npm install
+
     - name: Run Tests
+      env:
+        NODE_ENV: test # Use SQLite in testing
       run: |
         cd aplikacija/backend
-        NODE_ENV=test npm test # Run tests using SQLite
+        npm test
