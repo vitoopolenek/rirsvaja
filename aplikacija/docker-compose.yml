@@ -16,6 +16,7 @@ services:
       - ./db/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
     networks:
       - my_network
+    restart: always
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -30,6 +31,7 @@ services:
       - mysql
     networks:
       - my_network
+    restart: always
 
   backend:
     build:
@@ -37,6 +39,7 @@ services:
     container_name: my_backend
     environment:
       DB_HOST: mysql
+      DB_PORT: 3306
       DB_USER: projectuser
       DB_PASSWORD: projectpass123
       DB_NAME: projectdb
@@ -46,6 +49,7 @@ services:
       - mysql
     networks:
       - my_network
+    restart: always
 
 volumes:
   mysql_data:

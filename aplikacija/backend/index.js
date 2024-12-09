@@ -2,13 +2,12 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const bcrypt = require('bcrypt');
-
+const bcrypt = require("bcrypt");
 
 dotenv.config({ path: "../.env" });
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -21,14 +20,25 @@ const db = mysql.createConnection({
   port: process.env.DB_PORT,
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to MySQL:", err);
-    return;
-  }
-  console.log("Connected to MySQL database");
+// Connect to MySQL database
+const connectToDatabase = () => {
+  db.connect((err) => {
+    if (err) {
+      console.error("Error connecting to MySQL:", err);
+      setTimeout(connectToDatabase, 5000); // Retry every 5 seconds
+    } else {
+      console.log("Connected to MySQL database");
+    }
+  });
+};
+connectToDatabase();
+
+// Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
+// Route to fetch all employees
 app.get("/api/employees", (req, res) => {
   const query = "SELECT * FROM employees";
   db.query(query, (err, results) => {
@@ -38,22 +48,22 @@ app.get("/api/employees", (req, res) => {
 });
 
 // Route to fetch work entries for a specific employee
-app.get("/api/entries", async (req, res) => {
+app.get("/api/entries", (req, res) => {
   const { employeeId } = req.query;
 
   if (!employeeId) {
-    return res.status(400).json({ error: 'Employee ID is required' });
+    return res.status(400).json({ error: "Employee ID is required" });
   }
 
   const query = "SELECT * FROM work_entries WHERE employee_id = ?";
   db.query(query, [employeeId], (err, results) => {
     if (err) {
       console.error("Error fetching work entries:", err);
-      return res.status(500).json({ error: 'Failed to fetch work entries' });
+      return res.status(500).json({ error: "Failed to fetch work entries" });
     }
 
     if (results.length === 0) {
-      return res.status(404).json({ error: 'No work entries found' });
+      return res.status(404).json({ error: "No work entries found" });
     }
 
     res.status(200).json(results);
@@ -61,18 +71,19 @@ app.get("/api/entries", async (req, res) => {
 });
 
 // Route to fetch monthly hours for a specific employee
-app.get("/api/entries/month", async (req, res) => {
+app.get("/api/entries/month", (req, res) => {
   const { employeeId, month } = req.query;
 
   if (!employeeId || !month) {
-    return res.status(400).json({ error: 'Employee ID and month are required' });
+    return res.status(400).json({ error: "Employee ID and month are required" });
   }
 
-  const query = "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?";
+  const query =
+    "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?";
   db.query(query, [employeeId, month], (err, results) => {
     if (err) {
       console.error("Error fetching monthly hours:", err);
-      return res.status(500).json({ error: 'Failed to fetch monthly hours' });
+      return res.status(500).json({ error: "Failed to fetch monthly hours" });
     }
 
     res.status(200).json(results);
@@ -80,38 +91,32 @@ app.get("/api/entries/month", async (req, res) => {
 });
 
 // Route to update a work entry
-app.put("/api/entries/:id", async (req, res) => {
+app.put("/api/entries/:id", (req, res) => {
   const { id } = req.params;
   const { hoursWorked, date, description } = req.body;
 
-  const query = "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?";
+  const query =
+    "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?";
   db.query(query, [hoursWorked, date, description, id], (err, results) => {
     if (err) {
       console.error("Error updating work entry:", err);
-      return res.status(500).json({ error: 'Failed to update work entry' });
+      return res.status(500).json({ error: "Failed to update work entry" });
     }
 
     if (results.affectedRows === 0) {
-      return res.status(404).json({ error: 'Work entry not found' });
+      return res.status(404).json({ error: "Work entry not found" });
     }
 
     res.status(200).json({ message: "Data updated successfully" });
   });
 });
 
-const isValidDate = (date) => {
-  return !isNaN(Date.parse(date));
-};
-
+// Route to fetch total hours
 app.get("/api/entries/total-hours", (req, res) => {
   const { startDate, endDate } = req.query;
 
   if (!startDate || !endDate) {
     return res.status(400).json({ error: "Start date and end date are required" });
-  }
-
-  if (!isValidDate(startDate) || !isValidDate(endDate)) {
-    return res.status(400).json({ error: "Invalid date format" });
   }
 
   const query = `
@@ -135,10 +140,9 @@ app.get("/api/entries/total-hours", (req, res) => {
   });
 });
 
-
-app.post("/api/login", async (req, res) => {
+// Login route
+app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
-  console.log("Login attempt:", { username });
 
   const query = "SELECT * FROM employees WHERE username = ?";
   db.query(query, [username], async (err, results) => {
@@ -146,21 +150,17 @@ app.post("/api/login", async (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({ error: "Database error" });
     }
+
     if (results.length === 0) {
-      console.warn("Invalid credentials: User not found");
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
     const user = results[0];
-    console.log("Fetched user:", user);
-
     try {
       const match = await bcrypt.compare(password, user.password);
       if (match) {
-        console.log("Login successful for user:", user.username);
         return res.json({ success: true, user });
       } else {
-        console.warn("Invalid credentials: Incorrect password");
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
     } catch (err) {
@@ -170,8 +170,18 @@ app.post("/api/login", async (req, res) => {
   });
 });
 
+// Start the server
 const server = app.listen(port, () => {
-  console.log("Server running on http://localhost:${port}");
+  console.log(`Server running on http://localhost:${port}`);
 });
 
-module.exports = { app, server, db }; // Export app, server, and db
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log("Shutting down server...");
+  db.end(() => {
+    console.log("MySQL connection closed");
+    process.exit(0);
+  });
+});
+
+module.exports = { app, server, db };
