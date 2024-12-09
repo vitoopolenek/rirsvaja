@@ -11,22 +11,6 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:latest
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword123
-          MYSQL_DATABASE: projectdb
-          MYSQL_USER: projectuser
-          MYSQL_PASSWORD: projectpass123
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
@@ -36,16 +20,32 @@ jobs:
       with:
         node-version: 18
 
+    - name: Set Up Docker
+      run: |
+        docker-compose -f aplikacija/backend/docker-compose.yml up -d
+        docker ps
+
+    - name: Wait for MySQL
+      run: |
+        until docker exec my_mysql mysqladmin ping -h127.0.0.1 --silent; do
+          echo "Waiting for MySQL to be ready..."
+          sleep 3
+        done
+
     - name: Install Dependencies
-      run: npm install
+      run: |
+        cd aplikacija/backend
+        npm install
 
     - name: Run Tests
-      env:
-        DB_HOST: 127.0.0.1
-        DB_USER: projectuser
-        DB_PASSWORD: projectpass123
-        DB_NAME: projectdb
-      run: npm test
+      run: |
+        cd aplikacija/backend
+        npm test
+
+    - name: Tear Down Docker
+      if: always()
+      run: |
+        docker-compose -f aplikacija/backend/docker-compose.yml down
 
   build:
     name: Build Backend
@@ -69,13 +69,17 @@ jobs:
           ${{ runner.os }}-node_modules
 
     - name: Install Dependencies
-      run: npm install
+      run: |
+        cd aplikacija/backend
+        npm install
 
     - name: Build Backend
-      run: npm run build
+      run: |
+        cd aplikacija/backend
+        npm run build
 
     - name: Save Build Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: backend-build
-        path: build/
+        path: aplikacija/backend/build/
