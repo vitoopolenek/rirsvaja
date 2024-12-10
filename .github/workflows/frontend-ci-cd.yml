@@ -18,10 +18,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Navigate to the correct directory
-      - name: Navigate to Frontend Directory
-        run: cd aplikacija
-
       # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -31,21 +27,18 @@ jobs:
 
       # Install Dependencies
       - name: Install Dependencies
-        run: |
-          cd aplikacija
-          npm install
+        run: npm install
+        working-directory: aplikacija
 
       # Run Tests
       - name: Run Tests
-        run: |
-          cd aplikacija
-          npm test -- --testPathPattern=src/novaFunk.test.js
+        run: npm test -- --testPathPattern=src/novaFunk.test.js
+        working-directory: aplikacija
 
       # Build Application
       - name: Build Frontend
-        run: |
-          cd aplikacija
-          npm run build
+        run: npm run build
+        working-directory: aplikacija
 
       # Save Build Artifacts
       - name: Upload Build Artifacts
