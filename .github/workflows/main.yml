@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
   test-backend:
@@ -11,47 +12,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-
+          node-version: '16'
       - name: Install backend dependencies
-        run: |
-          cd aplikacija/backend
-          npm install
-
+        run: cd aplikacija/backend && npm install
       - name: Run backend tests
-        run: |
-          cd aplikacija/backend
-          npm test
+        run: cd aplikacija/backend && npm test
 
   test-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
+          node-version: '16'
       - name: Install frontend dependencies
-        run: |
-          cd aplikacija
-          npm install
-
+        run: cd aplikacija && npm install
       - name: Run frontend tests
-        run: |
-          cd aplikacija
-          npm test
+        run: cd aplikacija && npm test
