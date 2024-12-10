@@ -1,5 +1,5 @@
-import React from 'react';
-import { AppBar, Toolbar, Button, Typography } from '@mui/material';
+import React from "react";
+import { AppBar, Toolbar, Button, Typography } from "@mui/material";
 
 // eslint-disable-next-line react/prop-types
 const Header = ({ onNavigate }) => {
@@ -9,14 +9,17 @@ const Header = ({ onNavigate }) => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Evidenca ur
         </Typography>
-        <Button color="inherit" onClick={() => onNavigate('vnesiUre')}>
+        <Button color="inherit" onClick={() => onNavigate("vnesiUre")}>
           Vnesi ure
         </Button>
-        <Button color="inherit" onClick={() => onNavigate('mojaEvidenca')}>
+        <Button color="inherit" onClick={() => onNavigate("mojaEvidenca")}>
           Moja evidenca
         </Button>
-        <Button color="inherit" onClick={() => onNavigate('pregled')}>
+        <Button color="inherit" onClick={() => onNavigate("pregled")}>
           Pregled
+        </Button>
+        <Button color="inherit" onClick={() => onNavigate("monthlySummary")}>
+          Mesečni Povzetek
         </Button>
       </Toolbar>
     </AppBar>

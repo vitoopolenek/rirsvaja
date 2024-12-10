@@ -1,0 +1,45 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Install Dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # Run Tests
+      - name: Run Tests
+        run: npm test -- --testPathPattern=src/novaFunk.test.js
+
+      # Build Application
+      - name: Build Frontend
+        run: npm run build
+
+      # Save Build Artifacts
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: dist/

@@ -65,19 +65,26 @@ app.get("/api/entries/month", async (req, res) => {
   const { employeeId, month } = req.query;
 
   if (!employeeId || !month) {
-    return res.status(400).json({ error: 'Employee ID and month are required' });
+    return res.status(400).json({ error: "Employee ID and month are required" });
   }
 
-  const query = "SELECT * FROM work_entries WHERE employee_id = ? AND MONTH(date) = ?";
+  const query = `
+    SELECT we.employee_id, we.hours_worked, we.date, e.name 
+    FROM work_entries AS we
+    INNER JOIN employees AS e ON we.employee_id = e.id
+    WHERE we.employee_id = ? AND MONTH(we.date) = ?
+  `;
+
   db.query(query, [employeeId, month], (err, results) => {
     if (err) {
       console.error("Error fetching monthly hours:", err);
-      return res.status(500).json({ error: 'Failed to fetch monthly hours' });
+      return res.status(500).json({ error: "Failed to fetch monthly hours" });
     }
 
     res.status(200).json(results);
   });
 });
+
 
 // Route to update a work entry
 app.put("/api/entries/:id", async (req, res) => {
