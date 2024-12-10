@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: aplikacija/package-lock.json
 
       # Install Dependencies
       - name: Install Dependencies
