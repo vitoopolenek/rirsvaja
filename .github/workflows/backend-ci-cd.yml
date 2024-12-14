@@ -1,0 +1,36 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  backend-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: backend
+
+      - name: Run Tests
+        run: npm test
+        working-directory: backend
+
+      - name: Build Docker Image
+        run: docker build -t your-dockerhub-username/backend:latest .
+        working-directory: backend
+
+      - name: Push Docker Image
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push your-dockerhub-username/backend:latest
