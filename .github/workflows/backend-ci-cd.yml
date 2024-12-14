@@ -36,30 +36,22 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: aplikacija/backend
-
-      - name: Ensure `.env` File is Available
-        run: |
-          echo "Checking if .env exists"
-          ls aplikacija/backend
-          cat aplikacija/backend/.env
-        shell: bash
+        working-directory: backend
 
       - name: Start Backend Server
-        run: |
-          npm start &
-        working-directory: aplikacija/backend
+        run: npm start &
+        working-directory: backend
 
       - name: Wait for Backend to Start
         run: sleep 10
 
-      - name: Run Backend Tests
+      - name: Run Tests
         run: npm test
-        working-directory: aplikacija/backend/tests
+        working-directory: backend/tests
 
       - name: Build Backend Docker Image
-        run: docker build -f aplikacija/backend/Dockerfile -t vitopolenek/backend:latest .
-        working-directory: aplikacija/backend
+        run: docker build -f backend/Dockerfilebackend -t vitopolenek/backend:latest .
+        working-directory: .
 
       - name: Push Backend Docker Image
         run: |
