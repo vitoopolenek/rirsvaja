@@ -36,21 +36,21 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: backend
+        working-directory: aplikacija/backend
 
       - name: Start Backend Server
         run: npm start &
-        working-directory: backend
+        working-directory: aplikacija/backend
 
       - name: Wait for Backend to Start
         run: sleep 10
 
       - name: Run Tests
         run: npm test
-        working-directory: backend/tests
+        working-directory: aplikacija/backend/tests
 
       - name: Build Backend Docker Image
-        run: docker build -f backend/Dockerfilebackend -t vitopolenek/backend:latest .
+        run: docker build -f aplikacija/backend/Dockerfilebackend -t vitopolenek/backend:latest .
         working-directory: .
 
       - name: Push Backend Docker Image
