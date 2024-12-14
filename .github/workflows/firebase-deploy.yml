@@ -34,8 +34,10 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      # Step 6: Deploy to Firebase Hosting
       - name: Deploy to Firebase Hosting
         env:
           FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
-        run: firebase deploy --only hosting
+        run: |
+          cd ./aplikacija  # Change to the correct directory
+          firebase deploy --only hosting
+      
