@@ -10,34 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Adjust Node.js version if needed
+          node-version: '18'
 
-      # Step 3: Install Firebase Tools Globally
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      # Step 4: Install Dependencies
       - name: Install dependencies
         run: npm install
-        working-directory: ./aplikacija  # Adjust this if your files are elsewhere
+        working-directory: ./aplikacija
 
-      # Step 5: Build the Project
-      - name: Build Project
+      - name: Build project
         run: npm run build
-        working-directory: ./aplikacija  # Adjust this if your files are elsewhere
+        working-directory: ./aplikacija
 
-      # Step 6: Deploy to Firebase Hosting1111
+      - name: Debug Build Directory
+        run: |
+          echo "Build directory contents:"
+          ls -l ./aplikacija/dist
+        working-directory: ./aplikacija
+
       - name: Deploy to Firebase Hosting
         env:
           FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
         run: firebase deploy --only hosting --token $FIREBASE_AUTH_TOKEN
         working-directory: ./aplikacija
-    
