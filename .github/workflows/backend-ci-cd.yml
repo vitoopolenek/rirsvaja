@@ -36,24 +36,24 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: backend
+        working-directory: aplikacija
 
       - name: Start Backend Server
         run: |
-          cp aplikacija/.env backend/.env # Temporarily copy .env to avoid path issues
+          cp aplikacija/.env aplikacija/.env # Ensure the .env stays in the same folder
           npm start &
-        working-directory: backend
+        working-directory: aplikacija
 
       - name: Wait for Backend to Start
         run: sleep 10
 
       - name: Run Tests
         run: npm test
-        working-directory: backend
+        working-directory: aplikacija
 
       - name: Build Docker Image
         run: docker build -t your-dockerhub-username/backend:latest .
-        working-directory: backend
+        working-directory: aplikacija
 
       - name: Push Docker Image
         run: |
