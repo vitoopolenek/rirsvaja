@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Docker Image
         run: docker build -t your-dockerhub-username/backend:latest .
-        working-directory: aplikacija/backend
+        working-directory: aplikacija
 
       - name: Push Docker Image
         run: |
