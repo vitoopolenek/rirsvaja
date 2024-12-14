@@ -26,7 +26,7 @@ const MonthlySummary = () => {
       const fetchMonthlyHours = async () => {
         try {
           const response = await axios.get(
-            `http://localhost:5000/api/entries/month`,
+            `http://localhost:5001/api/entries/month`,
             {
               params: { employeeId: 1, month },
             }

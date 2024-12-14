@@ -7,17 +7,18 @@ import LoginForm from "./components/LoginForm";
 import EmployeeHoursTable from "./components/EmployeeHoursTable";
 import Overview from "./components/Overview";
 import MonthlySummary from "./components/MonthlySummary";
+import EmployeeSummary from "./components/EmployeeSummary";
 
 const App = () => {
   const [currentView, setCurrentView] = useState("login");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
-  const [selectedEntry, setSelectedEntry] = useState(null); 
+  const [selectedEntry, setSelectedEntry] = useState(null);
 
   const handleNavigate = (view) => {
     setCurrentView(view);
     if (view === "mojaEvidenca" && isAuthenticated) {
-      setEmployeeId(1); //TODO make it dynamic
+      setEmployeeId(1); // TODO: Make it dynamic
     }
   };
 
@@ -33,7 +34,7 @@ const App = () => {
 
   return (
     <Router>
-      <div >
+      <div>
         {currentView !== "login" && <Header onNavigate={handleNavigate} />}
         {currentView === "login" && <LoginForm onLogin={handleLogin} />}
         {currentView === "vnesiUre" && <EmployeeEntryForm />}
@@ -47,7 +48,7 @@ const App = () => {
           <EditEntryForm entryId={selectedEntry.id} />
         )}
         {currentView === "monthlySummary" && <MonthlySummary />}
-
+        {currentView === "employeeSummary" && <EmployeeSummary />}
       </div>
     </Router>
   );

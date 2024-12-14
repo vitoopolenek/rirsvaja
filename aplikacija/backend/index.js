@@ -2,13 +2,13 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 
 dotenv.config({ path: "../.env" });
 
 const app = express();
-const port = 5000;
+const port = 5001;
 
 app.use(cors());
 app.use(express.json());
@@ -59,6 +59,30 @@ app.get("/api/entries", async (req, res) => {
     res.status(200).json(results);
   });
 });
+
+app.get("/api/employees/summary", async (req, res) => {
+  const query = `
+    SELECT 
+      e.id AS employee_id,
+      e.name,
+      SUM(we.hours_worked) AS total_hours,
+      ROUND((SUM(we.hours_worked) / 160) * 100, 2) AS efficiency,
+      CASE WHEN e.isBoss = 1 THEN 'Yes' ELSE 'No' END AS isBoss
+    FROM employees AS e
+    LEFT JOIN work_entries AS we ON e.id = we.employee_id
+    GROUP BY e.id, e.name, e.isBoss
+    ORDER BY total_hours DESC;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching employee summary:", err);
+      return res.status(500).json({ error: "Failed to fetch summary" });
+    }
+    res.json(results);
+  });
+});
+
 
 // Route to fetch monthly hours for a specific employee
 app.get("/api/entries/month", async (req, res) => {

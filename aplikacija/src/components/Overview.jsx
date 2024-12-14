@@ -25,7 +25,7 @@ const Overview = () => {
         setLoading(true);
         try {
           const response = await axios.get(
-            `http://localhost:5000/api/entries/month?month=${selectedMonth}`
+            `http://localhost:5001/api/entries/month?month=${selectedMonth}`
           );
           setEmployeeHours(response.data);
           setFilteredEmployeeHours(response.data);

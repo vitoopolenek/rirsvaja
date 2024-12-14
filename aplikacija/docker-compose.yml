@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   mysql:
@@ -10,12 +10,17 @@ services:
       MYSQL_USER: projectuser
       MYSQL_PASSWORD: projectpass123
     ports:
-      - "3306:3306"
+      - "3306:3306" # MySQL database exposed on port 3306
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./db/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
+      - mysql_data:/var/lib/mysql # Persistent data storage for MySQL
+      - ./db/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql # Run initial SQL setup script
     networks:
       - my_network
+    healthcheck: # Add a healthcheck to ensure MySQL is ready
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -25,14 +30,48 @@ services:
       PMA_USER: projectuser
       PMA_PASSWORD: projectpass123
     ports:
-      - "8080:80"
+      - "8080:80" # Access phpMyAdmin at localhost:8080
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy # Wait for MySQL to be ready
     networks:
       - my_network
 
+  backend:
+    build:
+      context: ./backend # Adjusted to match your folder structure
+      dockerfile: Dockerfilebackend
+    container_name: backend_service
+    environment:
+      DB_HOST: mysql
+      DB_USER: projectuser
+      DB_PASSWORD: projectpass123
+      DB_NAME: projectdb
+      DB_PORT: 3306
+    ports:
+      - "5001:5001" # Map backend service to port 5001
+    depends_on:
+      mysql:
+        condition: service_healthy # Wait for MySQL to be ready
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/app # Mount backend source code for hot-reloading (optional)
+
+  frontend:
+    build:
+      context: ./ # Adjust to match your frontend folder location
+      dockerfile: Dockerfile # Frontend Dockerfile name
+    container_name: frontend_service
+    ports:
+      - "3000:80" # Access frontend at localhost:3000
+    networks:
+      - my_network
+    depends_on:
+      - backend # Ensure backend starts before the frontend
+
 volumes:
-  mysql_data:
+  mysql_data: # Persistent volume for MySQL
 
 networks:
-  my_network:
+  my_network: # Shared network for services

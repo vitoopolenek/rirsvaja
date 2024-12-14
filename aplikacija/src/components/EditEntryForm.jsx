@@ -13,7 +13,7 @@ const EditEntryForm = ({ entryId }) => {
     useEffect(() => {
         const fetchEntry = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/entries/${entryId}`);
+                const response = await axios.get(`http://localhost:5001/api/entries/${entryId}`);
                 setFormData(response.data);
             } catch (error) {
                 console.error("Error fetching entry:", error);
@@ -35,7 +35,7 @@ const EditEntryForm = ({ entryId }) => {
         try {
             console.log("Updating entry with ID:", entryId); // Debugging log
             console.log("Form data:", formData); // Log form data for debugging
-            await axios.put(`http://localhost:5000/api/entries/${entryId}`, formData);
+            await axios.put(`http://localhost:5001/api/entries/${entryId}`, formData);
             alert("Entry updated successfully");
         } catch (error) {
             console.error("Error updating entry:", error); // Log error if update fails

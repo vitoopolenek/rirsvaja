@@ -23,7 +23,7 @@ const EmployeeEntryForm = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const response = await axios.get("http://localhost:5000/api/employees");
+      const response = await axios.get("http://localhost:5001/api/employees");
       setEmployees(response.data);
     };
 
@@ -41,7 +41,7 @@ const EmployeeEntryForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/entries", formData);
+      await axios.post("http://localhost:5001/api/entries", formData);
       alert("Data submitted successfully");
       setFormData({
         employeeId: "",

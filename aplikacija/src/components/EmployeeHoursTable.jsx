@@ -12,7 +12,7 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
   useEffect(() => {
     const fetchEntries = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/entries?employeeId=${employeeId}`);
+        const response = await axios.get(`http://localhost:5001/api/entries?employeeId=${employeeId}`);
         setEntries(response.data); // Assuming response.data is an array of entries
       } catch (error) {
         console.error("Error fetching entries:", error);

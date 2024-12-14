@@ -1,7 +1,6 @@
 import React from "react";
 import { AppBar, Toolbar, Button, Typography } from "@mui/material";
 
-// eslint-disable-next-line react/prop-types
 const Header = ({ onNavigate }) => {
   return (
     <AppBar position="static">
@@ -20,6 +19,9 @@ const Header = ({ onNavigate }) => {
         </Button>
         <Button color="inherit" onClick={() => onNavigate("monthlySummary")}>
           Mesečni Povzetek
+        </Button>
+        <Button color="inherit" onClick={() => onNavigate("employeeSummary")}>
+          Povzetek Zaposlenih
         </Button>
       </Toolbar>
     </AppBar>
