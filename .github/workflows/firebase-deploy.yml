@@ -1,0 +1,38 @@
+name: Firebase Hosting Deployment
+
+on:
+  push:
+    branches:
+      - main # Adjust the branch name if your default branch is not `main`
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Adjust Node.js version based on your project requirements
+
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: npm install
+        working-directory: ./aplikacija # Adjust this if your project is in a different folder
+
+      # Step 4: Build the project
+      - name: Build Project
+        run: npm run build
+        working-directory: ./aplikacija # Adjust this if your project is in a different folder
+
+      # Step 5: Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting
+        env:
+          FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
+        run: |
+          firebase deploy --only hosting
