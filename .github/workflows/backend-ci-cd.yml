@@ -14,9 +14,9 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
+          MYSQL_DATABASE: projectdb
+          MYSQL_USER: projectuser
+          MYSQL_PASSWORD: projectpass123
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
           --health-interval=10s
@@ -36,22 +36,24 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: aplikacija/backend
+        working-directory: backend
 
       - name: Start Backend Server
-        run: npm start &
-        working-directory: aplikacija/backend
+        run: |
+          cp aplikacija/.env backend/.env # Temporarily copy .env to avoid path issues
+          npm start &
+        working-directory: backend
 
       - name: Wait for Backend to Start
         run: sleep 10
 
       - name: Run Tests
         run: npm test
-        working-directory: aplikacija/backend
+        working-directory: backend
 
       - name: Build Docker Image
         run: docker build -t your-dockerhub-username/backend:latest .
-        working-directory: aplikacija
+        working-directory: backend
 
       - name: Push Docker Image
         run: |
