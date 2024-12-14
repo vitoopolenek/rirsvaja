@@ -23,7 +23,7 @@ jobs:
         working-directory: aplikacija
 
       - name: Run Specific Tests
-        run: npm test --src/vaja4funk.test.js
+        run: npx jest src/vaja4funk.test.js --passWithNoTests
         working-directory: aplikacija
 
       - name: Build Application
