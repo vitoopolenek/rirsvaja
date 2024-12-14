@@ -38,5 +38,6 @@ jobs:
       - name: Deploy to Firebase Hosting
         env:
           FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
-        run: firebase deploy --only hosting
-        working-directory: ./aplikacija  # Adjust this if your files are elsewhere
+        run: firebase deploy --only hosting --token $FIREBASE_AUTH_TOKEN
+        working-directory: ./aplikacija
+    
