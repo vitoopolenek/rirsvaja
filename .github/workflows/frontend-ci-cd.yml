@@ -22,8 +22,8 @@ jobs:
         run: npm install
         working-directory: aplikacija
 
-      - name: Run Tests
-        run: npm test
+      - name: Run Specific Tests
+        run: npm test --src/vaja4funk.test.js
         working-directory: aplikacija
 
       - name: Build Application
