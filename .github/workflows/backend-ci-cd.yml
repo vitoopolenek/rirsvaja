@@ -38,9 +38,15 @@ jobs:
         run: npm install
         working-directory: aplikacija
 
+      - name: Use `.env` File
+        run: |
+          echo "Ensuring .env file is available"
+          ls aplikacija # Debug step to verify the .env file
+          export $(cat aplikacija/.env | xargs)
+        shell: bash
+
       - name: Start Backend Server
         run: |
-          cp aplikacija/.env aplikacija/.env # Ensure the .env stays in the same folder
           npm start &
         working-directory: aplikacija
 
