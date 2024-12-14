@@ -1,18 +1,20 @@
+# Use Node.js Alpine as a base image
 FROM node:18-alpine
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json and package-lock.json into the container
+COPY aplikacija/backend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the backend code
-COPY . .
+# Copy the rest of the backend code into the container
+COPY aplikacija/backend .
 
 # Expose the application port
-EXPOSE 5001
+EXPOSE 3000
 
 # Start the application
 CMD ["npm", "start"]
