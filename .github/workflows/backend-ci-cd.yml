@@ -10,50 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # List files and directories to debug and verify structure
-      - name: Verify Directory Structure
-        run: ls -la
-
-      # Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
 
-      # Navigate to the backend directory
-      - name: Navigate to Backend Directory
-        run: cd backend && ls -la
-        shell: bash
-
-      # Install dependencies
       - name: Install Dependencies
         run: npm install
-        working-directory: backend
+        working-directory: aplikacija/backend
 
-      # Start the backend server in the background
       - name: Start Backend Server
         run: npm start &
-        working-directory: backend
+        working-directory: aplikacija/backend
 
-      # Wait for backend server to start
       - name: Wait for Backend to Start
         run: sleep 10
 
-      # Run tests
       - name: Run Tests
         run: npm test
-        working-directory: backend
+        working-directory: aplikacija/backend
 
-      # Build Docker image
       - name: Build Docker Image
         run: docker build -t your-dockerhub-username/backend:latest .
-        working-directory: backend
+        working-directory: aplikacija/backend
 
-      # Push Docker image to DockerHub
       - name: Push Docker Image
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
