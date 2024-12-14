@@ -34,7 +34,7 @@ jobs:
         run: npm run build
         working-directory: ./aplikacija  # Adjust this if your files are elsewhere
 
-      # Step 6: Deploy to Firebase Hosting
+      # Step 6: Deploy to Firebase Hosting1111
       - name: Deploy to Firebase Hosting
         env:
           FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
