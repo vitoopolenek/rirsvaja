@@ -5,28 +5,33 @@ on:
     branches:
       - main
 
-jobs: #So I can push this again and retry
+jobs:
   sonarcloud:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # Step 3: Install dependencies
       - name: Install Dependencies
         run: npm install
         working-directory: ./aplikacija
 
+      # Step 4: Run specific tests and generate coverage
       - name: Run Specific Tests and Generate Coverage
         run: |
           npx jest src/vaja4funk.test.js --coverage --passWithNoTests
         working-directory: ./aplikacija
 
+      # Step 5: SonarCloud analysis
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
@@ -39,3 +44,21 @@ jobs: #So I can push this again and retry
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**
+
+      # Step 6: Quality Gate Check
+      - name: Check Quality Gate
+        run: |
+          echo "Checking SonarCloud Quality Gate..."
+          STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN }}: \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=vitoopolenek_rirsvaja" \
+            | jq -r '.projectStatus.status')
+
+          echo "Quality Gate Status: $STATUS"
+          if [[ "$STATUS" != "OK" ]]; then
+            echo "❌ Quality Gate failed. Blocking pipeline."
+            exit 1
+          else
+            echo "✅ Quality Gate passed!"
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
