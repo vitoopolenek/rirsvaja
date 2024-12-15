@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import axios from "axios";
-import EmployeeSummary from "./components/EmployeeSummary"; // Ensure the correct path to your component
+import EmployeeSummary from "./components/EmployeeSummary";
 
 jest.mock("axios");
 
@@ -29,13 +29,11 @@ describe("EmployeeSummary Component Tests", () => {
     render(<EmployeeSummary />);
 
     await waitFor(() => {
-      // Verify data for first employee
       expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
       expect(screen.getByText(/120/i)).toBeInTheDocument();
       expect(screen.getByText(/90/i)).toBeInTheDocument();
       expect(screen.getAllByText(/1/i)[0]).toBeInTheDocument();
 
-      // Verify data for second employee
       expect(screen.getByText(/Jane Smith/i)).toBeInTheDocument();
       expect(screen.getByText(/100/i)).toBeInTheDocument();
       expect(screen.getByText(/85/i)).toBeInTheDocument();
