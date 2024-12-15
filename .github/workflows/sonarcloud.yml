@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-jobs:
+jobs: #So I can push this again and retry
   sonarcloud:
     runs-on: ubuntu-latest
 
