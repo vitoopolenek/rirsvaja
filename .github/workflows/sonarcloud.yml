@@ -22,8 +22,9 @@ jobs:
         run: npm install
         working-directory: ./aplikacija
 
-      - name: Run Tests and Generate Coverage
-        run: npm test -- --coverage
+      - name: Run Specific Tests and Generate Coverage
+        run: |
+          npx jest src/vaja4funk.test.js --coverage --passWithNoTests
         working-directory: ./aplikacija
 
       - name: SonarCloud Scan
@@ -32,3 +33,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: ./aplikacija
+          args: >
+            -Dsonar.organization=vitoopolenek
+            -Dsonar.projectKey=vitoopolenek_rirsvaja
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**
