@@ -50,7 +50,7 @@ jobs:
         run: npm test
         working-directory: aplikacija/backend/tests
 
-      - name: Build Backend Docker Image
+      - name: Build Backend Docker Image ########
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             TAG="dev"
